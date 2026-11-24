@@ -1,0 +1,705 @@
+<!doctype html>
+<html lang="id" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TontonKu — Video Pilihan Sendiri</title>
+<meta name="description" content="Aplikasi tontonan pribadi: hanya video yang Anda pilih yang tampil. Bisa di-install seperti aplikasi biasa.">
+<meta name="theme-color" content="#0f0f0f">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="TontonKu">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<style>
+:root{
+  --bg:#0f0f0f; --surface:#1f1f1f; --surface2:#2a2a2a; --card:#000;
+  --text:#f1f1f1; --text2:#aaaaaa; --line:#303030;
+  --accent:#f00; --accent-soft:rgba(255,0,0,.15); --chip:#272727; --chip-active:#f1f1f1; --chip-active-text:#0f0f0f;
+  --shadow:0 8px 30px rgba(0,0,0,.45);
+}
+html[data-theme="light"]{
+  --bg:#ffffff; --surface:#f2f2f2; --surface2:#e5e5e5; --card:#fff;
+  --text:#0f0f0f; --text2:#606060; --line:#e5e5e5;
+  --accent:#f00; --accent-soft:rgba(255,0,0,.10); --chip:#f2f2f2; --chip-active:#0f0f0f; --chip-active-text:#fff;
+  --shadow:0 8px 30px rgba(0,0,0,.15);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg); color:var(--text);
+  font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  font-size:15px; line-height:1.45; min-height:100vh;
+}
+button{font-family:inherit}
+a{color:inherit}
+img{max-width:100%;height:auto}
+
+/* ===== Header ===== */
+header{
+  position:sticky; top:0; z-index:50; display:flex; align-items:center; gap:.6rem;
+  padding:.5rem 1rem; background:var(--bg); border-bottom:1px solid var(--line);
+}
+.icon-btn{
+  background:transparent; border:0; color:var(--text); cursor:pointer;
+  width:40px; height:40px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center;
+  flex:0 0 auto; font-size:18px;
+}
+.icon-btn:hover{background:var(--surface2)}
+.logo{display:flex; align-items:center; gap:.4rem; font-weight:800; letter-spacing:-.3px; font-size:1.15rem; cursor:pointer; user-select:none; white-space:nowrap}
+.logo .mark{width:26px;height:18px;background:var(--accent);border-radius:5px;display:inline-flex;align-items:center;justify-content:center}
+.logo .mark::after{content:"";border-left:8px solid #fff;border-top:5px solid transparent;border-bottom:5px solid transparent;margin-left:1px}
+.logo b{color:var(--accent)}
+.search-wrap{flex:1 1 auto; display:flex; justify-content:center; min-width:0}
+.search{
+  display:flex; align-items:center; width:min(560px,100%); background:var(--surface);
+  border:1px solid var(--line); border-radius:999px; overflow:hidden;
+}
+.search input{
+  flex:1; min-width:0; background:transparent; border:0; outline:0; color:var(--text);
+  padding:.55rem 1rem; font-size:.95rem;
+}
+.search button{background:var(--surface2); border:0; color:var(--text); padding:.5rem 1rem; cursor:pointer; font-size:.95rem}
+.hdr-actions{display:flex; align-items:center; gap:.25rem; flex:0 0 auto}
+
+.btn{
+  display:inline-flex; align-items:center; gap:.4rem; border:1px solid var(--line);
+  background:var(--surface); color:var(--text); padding:.5rem .9rem; border-radius:999px;
+  cursor:pointer; font-size:.88rem; font-weight:600; white-space:nowrap;
+}
+.btn:hover{background:var(--surface2)}
+.btn.primary{background:var(--accent); border-color:var(--accent); color:#fff}
+.btn.primary:hover{filter:brightness(1.1)}
+.btn.ghost{background:transparent}
+.btn.danger{background:transparent; border-color:#a33; color:#ff6b6b}
+.btn.small{padding:.3rem .6rem; font-size:.8rem}
+
+/* ===== Chips ===== */
+.chips{
+  position:sticky; top:57px; z-index:40; display:flex; gap:.5rem; overflow-x:auto;
+  padding:.6rem 1rem; background:var(--bg); border-bottom:1px solid var(--line); scrollbar-width:none;
+}
+.chips::-webkit-scrollbar{display:none}
+.chip{
+  flex:0 0 auto; background:var(--chip); color:var(--text); border:1px solid var(--line);
+  padding:.35rem .8rem; border-radius:999px; cursor:pointer; font-size:.85rem; font-weight:500;
+}
+.chip.active{background:var(--chip-active); color:var(--chip-active-text); border-color:var(--chip-active)}
+
+/* ===== Grid ===== */
+main{padding:1rem; max-width:1600px; margin:0 auto}
+.grid{display:grid; gap:1.2rem 1rem; grid-template-columns:repeat(auto-fill,minmax(min(100%,320px),1fr))}
+.card{cursor:pointer; background:transparent; border:0; text-align:left; color:var(--text); padding:0; display:block; width:100%}
+.thumb{
+  position:relative; aspect-ratio:16/9; border-radius:12px; overflow:hidden;
+  background:linear-gradient(135deg,var(--surface2),var(--surface)); display:flex; align-items:center; justify-content:center;
+}
+.thumb img{width:100%; height:100%; object-fit:cover; display:block}
+.thumb .ph{font-size:2rem; opacity:.5}
+.badge-type{
+  position:absolute; right:6px; bottom:6px; background:rgba(0,0,0,.8); color:#fff;
+  font-size:.68rem; font-weight:700; padding:.15rem .4rem; border-radius:4px; letter-spacing:.5px;
+}
+.card h3{
+  margin:.55rem 0 .15rem; font-size:.95rem; font-weight:600; line-height:1.3;
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
+}
+.card .meta{color:var(--text2); font-size:.82rem}
+.card .cat-tag{display:inline-block; margin-top:.3rem; font-size:.72rem; color:var(--text2); background:var(--surface); border-radius:4px; padding:.1rem .4rem}
+.empty{text-align:center; color:var(--text2); padding:3rem 1rem}
+.empty .big{font-size:2.6rem; margin-bottom:.5rem}
+
+/* ===== Watch page ===== */
+.watch{display:grid; grid-template-columns:minmax(0,1fr) 340px; gap:1.4rem; align-items:start}
+.player{
+  position:relative; aspect-ratio:16/9; width:100%; border-radius:12px; overflow:hidden;
+  background:#000; display:flex; align-items:center; justify-content:center;
+}
+.player iframe,.player video{position:absolute; inset:0; width:100%; height:100%; border:0}
+.watch h1{font-size:1.25rem; margin:.8rem 0 .3rem; line-height:1.35}
+.watch .byline{color:var(--text2); font-size:.88rem; margin-bottom:.8rem}
+.actions{display:flex; flex-wrap:wrap; gap:.5rem; margin:.6rem 0 1rem}
+.rel-item{display:flex; gap:.7rem; padding:.5rem; border-radius:10px; cursor:pointer; border:0; background:transparent; text-align:left; color:var(--text); width:100%}
+.rel-item:hover{background:var(--surface)}
+.rel-item .rt{width:150px; flex:0 0 auto; aspect-ratio:16/9; border-radius:8px; overflow:hidden; background:var(--surface2); display:flex; align-items:center; justify-content:center}
+.rel-item .rt img{width:100%;height:100%;object-fit:cover}
+.rel-item b{font-size:.85rem; font-weight:600; line-height:1.3; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden}
+.rel-item .m{color:var(--text2); font-size:.76rem; margin-top:.2rem}
+.rel-title{font-weight:700; margin:1rem 0 .4rem; font-size:1rem}
+.back-row{margin-bottom:.8rem}
+
+/* ===== Drawer ===== */
+.drawer-backdrop{position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:60; display:none}
+.drawer{
+  position:fixed; top:0; left:0; bottom:0; width:min(280px,80vw); background:var(--bg); z-index:70;
+  transform:translateX(-105%); transition:transform .25s ease; padding:1rem .6rem; overflow-y:auto;
+  border-right:1px solid var(--line);
+}
+.drawer.open{transform:translateX(0)}
+.drawer-backdrop.show{display:block}
+.drawer .d-item{display:flex; align-items:center; gap:.7rem; width:100%; padding:.6rem .8rem; border-radius:10px; background:transparent; border:0; color:var(--text); cursor:pointer; font-size:.92rem; text-align:left}
+.drawer .d-item:hover{background:var(--surface)}
+.drawer .d-item.active{background:var(--accent-soft); color:var(--text); font-weight:700}
+.drawer .d-sep{border-top:1px solid var(--line); margin:.6rem 0}
+.drawer .d-label{font-size:.72rem; letter-spacing:1px; color:var(--text2); text-transform:uppercase; padding:.4rem .8rem}
+
+/* ===== Modal ===== */
+.modal-backdrop{position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:90; display:none; align-items:center; justify-content:center; padding:1rem}
+.modal-backdrop.show{display:flex}
+.modal{
+  background:var(--surface); border:1px solid var(--line); border-radius:16px; box-shadow:var(--shadow);
+  width:min(680px,100%); max-height:88vh; overflow-y:auto; padding:1.2rem;
+}
+.modal h2{margin:0 0 1rem; font-size:1.15rem}
+.modal .m-head{display:flex; align-items:center; justify-content:space-between; gap:1rem}
+label.f{display:block; font-size:.8rem; color:var(--text2); margin:.8rem 0 .25rem; font-weight:600}
+input.f,select.f,textarea.f{
+  width:100%; background:var(--bg); border:1px solid var(--line); color:var(--text);
+  border-radius:10px; padding:.6rem .8rem; font-size:.92rem; outline:0; font-family:inherit;
+}
+input.f:focus,select.f:focus{border-color:var(--accent)}
+.m-row{display:flex; gap:.6rem; flex-wrap:wrap; margin-top:1rem}
+.m-row .btn{flex:1 1 auto; justify-content:center}
+.pin-box{display:flex; gap:.5rem; align-items:center; justify-content:center; flex-direction:column; padding:1rem 0}
+.pin-box input{width:180px; text-align:center; letter-spacing:6px; font-size:1.3rem}
+.mg-item{display:flex; gap:.7rem; align-items:center; padding:.5rem; border-radius:10px; border:1px solid var(--line); margin-bottom:.5rem}
+.mg-item img{width:90px; aspect-ratio:16/9; object-fit:cover; border-radius:6px; background:var(--surface2); flex:0 0 auto}
+.mg-item .t{flex:1; min-width:0}
+.mg-item .t b{font-size:.85rem; display:block; line-height:1.3}
+.mg-item .t span{font-size:.75rem; color:var(--text2)}
+.mg-item .ops{display:flex; gap:.3rem; flex:0 0 auto}
+.hint{font-size:.78rem; color:var(--text2); margin-top:.4rem}
+.err{color:#ff6b6b; font-size:.82rem; margin-top:.4rem; display:none}
+.err.show{display:block}
+
+/* ===== Toast ===== */
+#toast{
+  position:fixed; left:50%; bottom:1.4rem; transform:translateX(-50%) translateY(20px);
+  background:var(--chip-active); color:var(--chip-active-text); padding:.6rem 1.1rem; border-radius:999px;
+  font-size:.85rem; font-weight:600; opacity:0; pointer-events:none; transition:.25s; z-index:100; max-width:90vw; text-align:center;
+}
+#toast.show{opacity:1; transform:translateX(-50%) translateY(0)}
+
+footer{color:var(--text2); text-align:center; padding:2rem 1rem; font-size:.78rem}
+
+/* ===== Responsive ===== */
+@media (max-width: 900px){
+  .watch{grid-template-columns:1fr}
+  .rel-item .rt{width:120px}
+}
+@media (max-width: 640px){
+  header{padding:.4rem .6rem; gap:.3rem}
+  .logo span.txt{display:none}
+  .search{border-radius:10px}
+  main{padding:.8rem}
+  .grid{grid-template-columns:1fr 1fr; gap:.8rem .6rem}
+  .card h3{font-size:.82rem}
+  .card .meta{font-size:.72rem}
+  .chips{top:55px}
+  .btn.install-btn span{display:none}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <button class="icon-btn" id="btnMenu" title="Menu" aria-label="Menu">☰</button>
+  <div class="logo" id="logoHome"><span class="mark"></span><span class="txt">Tonton<b>Ku</b></span></div>
+  <div class="search-wrap">
+    <div class="search">
+      <input id="q" type="search" placeholder="Cari video…" aria-label="Cari video">
+      <button id="btnSearch" title="Cari">🔍</button>
+    </div>
+  </div>
+  <div class="hdr-actions">
+    <button class="btn install-btn primary" id="btnInstall" style="display:none">⬇︎ <span>Install</span></button>
+    <button class="icon-btn" id="btnTheme" title="Ganti tema">🌙</button>
+    <button class="icon-btn" id="btnManage" title="Kelola video">⚙️</button>
+  </div>
+</header>
+
+<div class="chips" id="chips"></div>
+
+<main id="view"></main>
+
+<footer>TontonKu · kumpulan tontonan pilihan Anda sendiri</footer>
+
+<!-- Drawer -->
+<div class="drawer-backdrop" id="drawerBack"></div>
+<nav class="drawer" id="drawer">
+  <button class="d-item" data-nav="home">🏠 Beranda</button>
+  <div class="d-sep"></div>
+  <div class="d-label">Kategori</div>
+  <div id="drawerCats"></div>
+  <div class="d-sep"></div>
+  <button class="d-item" id="drawerManage">⚙️ Kelola Video</button>
+  <button class="d-item" id="drawerInstall">⬇︎ Install Aplikasi</button>
+</nav>
+
+<!-- Modal: Kelola -->
+<div class="modal-backdrop" id="mManage">
+  <div class="modal">
+    <div id="mgPin" style="display:none">
+      <h2 style="text-align:center">🔐 Masukkan PIN</h2>
+      <div class="pin-box">
+        <input class="f" id="pinInput" type="password" inputmode="numeric" maxlength="8" placeholder="••••" aria-label="PIN">
+        <div class="err" id="pinErr">PIN salah, coba lagi.</div>
+        <div class="m-row"><button class="btn primary" id="pinOk">Buka</button><button class="btn ghost" data-close>Keluar</button></div>
+        <div class="hint">PIN awal: <b>1234</b> (bisa diubah setelah masuk)</div>
+      </div>
+    </div>
+    <div id="mgPanel" style="display:none">
+      <div class="m-head">
+        <h2>⚙️ Kelola Video</h2>
+        <button class="icon-btn" data-close title="Tutup">✕</button>
+      </div>
+      <div class="m-row" style="margin-top:0">
+        <button class="btn primary" id="btnAdd">＋ Tambah Video</button>
+        <button class="btn" id="btnExport">⬇︎ Ekspor</button>
+        <button class="btn" id="btnImport">⬆︎ Impor</button>
+        <button class="btn" id="btnPin">🔑 Ubah PIN</button>
+        <button class="btn danger" id="btnReset">↺ Reset</button>
+      </div>
+      <input type="file" id="fileImport" accept=".json,application/json" style="display:none">
+      <div id="mgList" style="margin-top:1rem"></div>
+      <div class="hint" id="mgCount"></div>
+    </div>
+    <div id="mgForm" style="display:none">
+      <div class="m-head">
+        <h2 id="formTitle">＋ Tambah Video</h2>
+        <button class="icon-btn" data-close title="Tutup">✕</button>
+      </div>
+      <label class="f">Tautan video (YouTube atau .mp4) *</label>
+      <input class="f" id="fUrl" placeholder="https://www.youtube.com/watch?v=… atau https://…/video.mp4">
+      <button class="btn small" id="btnMeta" style="margin-top:.4rem">✨ Ambil judul otomatis</button>
+      <div class="hint" id="fType" style="margin-top:.3rem"></div>
+      <label class="f">Judul *</label>
+      <input class="f" id="fTitle" placeholder="Judul tampilan">
+      <label class="f">Nama channel / pembuat</label>
+      <input class="f" id="fChannel" placeholder="opsional">
+      <label class="f">Kategori</label>
+      <input class="f" id="fCat" list="catList" placeholder="mis. Edukasi">
+      <datalist id="catList"></datalist>
+      <label class="f">Gambar sampul (poster, khusus .mp4)</label>
+      <input class="f" id="fPoster" placeholder="https://…/gambar.jpg (opsional)">
+      <div class="err" id="formErr"></div>
+      <div class="m-row">
+        <button class="btn primary" id="btnSaveVideo">💾 Simpan</button>
+        <button class="btn ghost" id="btnCancelForm">Batal</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Panduan install -->
+<div class="modal-backdrop" id="mInstall">
+  <div class="modal">
+    <div class="m-head">
+      <h2>📥 Install Aplikasi</h2>
+      <button class="icon-btn" data-close title="Tutup">✕</button>
+    </div>
+    <div id="installBody"></div>
+  </div>
+</div>
+
+<!-- Modal: Konfirmasi -->
+<div class="modal-backdrop" id="mConfirm">
+  <div class="modal" style="width:min(420px,100%)">
+    <h2 id="cfTitle">Yakin?</h2>
+    <p id="cfMsg" style="color:var(--text2)"></p>
+    <div class="m-row">
+      <button class="btn danger" id="cfYes">Ya, lanjut</button>
+      <button class="btn ghost" id="cfNo">Batal</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+'use strict';
+/* =====================================================================
+   ★ DAFTAR VIDEO ANDA — EDIT BAGIAN INI ★
+   Ganti contoh di bawah dengan link milik Anda.
+   - type:'youtube' → src: link YouTube biasa (watch, youtu.be, shorts, embed)
+   - type:'file'    → src: tautan langsung file .mp4 (boleh tambah poster)
+   Kategori bebas; boleh dikosongkan.
+   Anda juga bisa menambah/hapus lewat tombol ⚙️ di aplikasi (PIN awal: 1234).
+===================================================================== */
+const DEFAULT_VIDEOS = [
+  { id:'v1', type:'youtube', src:'https://www.youtube.com/watch?v=aqz-KE-bpKQ', title:'Big Buck Bunny — film animasi pendek (contoh)', channel:'Blender', category:'Contoh', poster:'' },
+  { id:'v2', type:'youtube', src:'https://www.youtube.com/watch?v=jNQXAC9IVRw', title:'Video pertama di YouTube: "Me at the zoo" (contoh)', channel:'jawed', category:'Contoh', poster:'' },
+  { id:'v3', type:'file', src:'https://media.w3.org/2010/05/bunny/trailer.mp4', title:'Big Buck Bunny — trailer MP4 (contoh)', channel:'Blender', category:'Contoh', poster:'' },
+  { id:'v4', type:'file', src:'https://media.w3.org/2010/05/sintel/trailer.mp4', title:'Sintel — trailer MP4 (contoh)', channel:'Blender', category:'Contoh', poster:'' },
+  { id:'v5', type:'file', src:'https://mdn.github.io/shared-assets/videos/flower.mp4', title:'Bunga — MP4 langsung (contoh)', channel:'MDN', category:'Contoh', poster:'' },
+  { id:'v6', type:'file', src:'https://media.w3.org/2010/05/video/movie_300.mp4', title:'Video contoh W3C — MP4 langsung (contoh)', channel:'W3C', category:'Contoh', poster:'' }
+];
+
+/* ===== Penyimpanan ===== */
+const LS_V='tontonku.videos.v1', LS_PIN='tontonku.pin', LS_THEME='tontonku.theme';
+const DEFAULT_PIN='1234';
+const PX='data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==';
+let videos=loadVideos(), editId=null, installEvt=null, unlocked=false, cfCb=null, toastT=null, tmr=null;
+let state={q:'', cat:'Semua'};
+
+const $=s=>document.querySelector(s);
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function uid(){return 'v'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
+function loadVideos(){
+  try{ const r=localStorage.getItem(LS_V); if(r){ const a=JSON.parse(r); if(Array.isArray(a)&&a.every(x=>x&&x.src)) return a; } }catch(e){}
+  return JSON.parse(JSON.stringify(DEFAULT_VIDEOS));
+}
+function saveVideos(){ try{ localStorage.setItem(LS_V, JSON.stringify(videos)); }catch(e){} }
+function getPin(){ try{ return localStorage.getItem(LS_PIN)||DEFAULT_PIN; }catch(e){ return DEFAULT_PIN; } }
+function isIOS(){ return /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1); }
+
+/* ===== Util video ===== */
+function ytId(url){
+  if(!url) return null;
+  const s=String(url).trim();
+  if(/^[\w-]{11}$/.test(s)) return s;
+  const m=s.match(/(?:youtu\.be\/|v=|\/shorts\/|\/embed\/|\/live\/|\/v\/)([\w-]{11})/);
+  return m?m[1]:null;
+}
+function ytThumb(id){ return 'https://i.ytimg.com/vi/'+id+'/hqdefault.jpg'; }
+function watchUrl(id){ return 'https://www.youtube.com/watch?v='+id; }
+function thumbInner(v){
+  const fb='<div class="ph">▶</div>';
+  if(v.type==='youtube'){
+    const id=ytId(v.src); if(!id) return fb;
+    return '<img src="'+ytThumb(id)+'" alt="" loading="lazy" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'"><div class="ph" style="display:none">▶</div>';
+  }
+  if(v.poster){
+    return '<img src="'+esc(v.poster)+'" alt="" loading="lazy" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'"><div class="ph" style="display:none">▶</div>';
+  }
+  return fb;
+}
+function thumbHTML(v){ return '<div class="thumb">'+thumbInner(v)+'<span class="badge-type">'+(v.type==='youtube'?'YouTube':'MP4')+'</span></div>'; }
+function miniThumb(v){
+  let src='';
+  if(v.type==='youtube'){ const id=ytId(v.src); if(id) src=ytThumb(id); }
+  else if(v.poster) src=v.poster;
+  return '<img src="'+esc(src||PX)+'" alt="" onerror="this.style.visibility=\'hidden\'">';
+}
+
+/* ===== Render ===== */
+function categories(){
+  const set=new Set();
+  videos.forEach(v=>{ const c=String(v.category||'').trim(); if(c) set.add(c); });
+  return ['Semua'].concat(Array.from(set));
+}
+function renderChips(){
+  const cats=categories();
+  if(state.cat!=='Semua' && cats.indexOf(state.cat)<0) state.cat='Semua';
+  $('#chips').innerHTML=cats.map(c=>'<button class="chip'+(c===state.cat?' active':'')+'" data-cat="'+esc(c)+'">'+esc(c)+'</button>').join('');
+  $('#drawerCats').innerHTML=cats.map(c=>'<button class="d-item'+(c===state.cat?' active':'')+'" data-cat="'+esc(c)+'">'+(c==='Semua'?'📚':'🏷️')+' '+esc(c)+'</button>').join('');
+}
+function filtered(){
+  const q=state.q.toLowerCase().trim();
+  return videos.filter(v=>{
+    if(state.cat!=='Semua' && String(v.category||'')!==state.cat) return false;
+    if(!q) return true;
+    return (v.title||'').toLowerCase().indexOf(q)>-1 || (v.channel||'').toLowerCase().indexOf(q)>-1 || (v.category||'').toLowerCase().indexOf(q)>-1;
+  });
+}
+function cardHTML(v){
+  return '<button class="card" data-go="'+esc(v.id)+'">'+thumbHTML(v)
+    +'<h3>'+esc(v.title||'Tanpa judul')+'</h3>'
+    +'<div class="meta">'+esc(v.channel||'')+((v.channel&&v.category)?' · ':'')+esc(v.category||'')+'</div>'
+    +(v.category?'<span class="cat-tag">'+esc(v.category)+'</span>':'')+'</button>';
+}
+function renderHome(){
+  $('#chips').style.display='';
+  const list=filtered();
+  $('#view').innerHTML=list.length
+    ? '<div class="grid">'+list.map(cardHTML).join('')+'</div>'
+    : '<div class="empty"><div class="big">📭</div><p><b>Tidak ada video.</b></p><p>Tambahkan lewat tombol ⚙️ (Kelola Video), atau ubah daftar langsung di file index.html.</p></div>';
+}
+function relHTML(cur){
+  const same=videos.filter(v=>v.id!==cur.id && v.category && v.category===cur.category);
+  const ids={}; same.forEach(v=>ids[v.id]=1);
+  const rest=videos.filter(v=>v.id!==cur.id && !ids[v.id]);
+  const items=same.concat(rest).slice(0,12);
+  if(!items.length) return '<div class="hint" style="margin-top:1rem">Belum ada video lain di daftar.</div>';
+  return '<div class="rel-title">Tontonan lain</div>'+items.map(v=>
+    '<button class="rel-item" data-go="'+esc(v.id)+'"><div class="rt">'+thumbInner(v)+'</div><div><b>'+esc(v.title||'Tanpa judul')
+    +'</b><div class="m">'+esc(v.channel||'')+((v.channel&&v.category)?' · ':'')+esc(v.category||'')+'</div></div></button>').join('');
+}
+function renderWatch(id){
+  $('#chips').style.display='none';
+  const v=videos.find(x=>x.id===id);
+  if(!v){ $('#view').innerHTML='<div class="empty"><div class="big">🔍</div><p>Video tidak ditemukan.</p><button class="btn" data-nav>← Kembali ke beranda</button></div>'; return; }
+  let player='';
+  if(v.type==='youtube'){
+    const yid=ytId(v.src);
+    player=yid
+      ? '<div class="player"><iframe src="https://www.youtube-nocookie.com/embed/'+yid+'?autoplay=1&rel=0&modestbranding=1" title="'+esc(v.title)+'" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></div>'
+      : '<div class="empty">Link YouTube tidak valid.</div>';
+  } else {
+    player='<div class="player"><video src="'+esc(v.src)+'" '+(v.poster?'poster="'+esc(v.poster)+'" ':'')+'controls playsinline preload="metadata"></video></div>';
+  }
+  const openBtn=(v.type==='youtube'&&ytId(v.src))?'<a class="btn ghost" href="'+watchUrl(ytId(v.src))+'" target="_blank" rel="noopener">↗ Buka di YouTube</a>':'';
+  $('#view').innerHTML=
+    '<div class="back-row"><button class="btn ghost" data-nav>← Kembali</button></div>'
+    +'<div class="watch"><div>'+player
+    +'<h1>'+esc(v.title||'Tanpa judul')+'</h1>'
+    +'<div class="byline">'+esc(v.channel||'—')+(v.category?' · '+esc(v.category):'')+'</div>'
+    +'<div class="actions"><button class="btn" id="btnCopy">🔗 Salin tautan</button>'+openBtn+'</div>'
+    +'</div><div>'+relHTML(v)+'</div></div>';
+  const cp=$('#btnCopy');
+  if(cp) cp.onclick=function(){ copyText(v.type==='youtube'&&ytId(v.src)?watchUrl(ytId(v.src)):v.src); };
+  const vid=$('#view').querySelector('video');
+  if(vid){ const p=vid.play(); if(p&&p.catch) p.catch(function(){}); }
+}
+
+/* ===== Router ===== */
+function route(){
+  const h=location.hash||'#/';
+  const m=h.match(/^#\/watch\/(.+)$/);
+  if(m) renderWatch(decodeURIComponent(m[1])); else renderHome();
+  window.scrollTo(0,0);
+  closeDrawer();
+}
+window.addEventListener('hashchange',route);
+
+/* ===== Delegasi klik ===== */
+document.addEventListener('click',function(e){
+  const go=e.target.closest('[data-go]');
+  if(go){ location.hash='#/watch/'+encodeURIComponent(go.getAttribute('data-go')); return; }
+  const cat=e.target.closest('[data-cat]');
+  if(cat){ state.cat=cat.getAttribute('data-cat'); state.q=''; $('#q').value=''; renderChips(); route(); return; }
+  const nav=e.target.closest('[data-nav]');
+  if(nav){ location.hash='#/'; renderChips(); route(); return; }
+  const ed=e.target.closest('[data-edit]');
+  if(ed){ openForm(ed.getAttribute('data-edit')); return; }
+  const dl=e.target.closest('[data-del]');
+  if(dl){
+    const v=videos.find(x=>x.id===dl.getAttribute('data-del'));
+    confirmBox('Hapus video?', '"'+(v&&v.title?v.title:'(tanpa judul)')+'" akan dihapus dari daftar.', function(){
+      videos=videos.filter(x=>x.id!==dl.getAttribute('data-del'));
+      saveVideos(); renderMgList(); renderChips(); route(); toast('Video dihapus ✔');
+    });
+    return;
+  }
+  const closer=e.target.closest('[data-close]');
+  if(closer){ const b=closer.closest('.modal-backdrop'); if(b) b.classList.remove('show'); return; }
+});
+Array.prototype.forEach.call(document.querySelectorAll('.modal-backdrop'),function(b){
+  b.addEventListener('click',function(e){ if(e.target===b) b.classList.remove('show'); });
+});
+
+/* ===== Pencarian ===== */
+$('#q').addEventListener('input',function(e){
+  clearTimeout(tmr);
+  tmr=setTimeout(function(){ state.q=e.target.value; if(location.hash.indexOf('#/watch')===0) location.hash='#/'; else renderHome(); },200);
+});
+$('#btnSearch').addEventListener('click',function(){ state.q=$('#q').value; if(location.hash.indexOf('#/watch')===0) location.hash='#/'; else renderHome(); });
+
+/* ===== Drawer & header ===== */
+function openDrawer(){ $('#drawer').classList.add('open'); $('#drawerBack').classList.add('show'); }
+function closeDrawer(){ $('#drawer').classList.remove('open'); $('#drawerBack').classList.remove('show'); }
+$('#btnMenu').addEventListener('click',openDrawer);
+$('#drawerBack').addEventListener('click',closeDrawer);
+$('#drawerManage').addEventListener('click',function(){ closeDrawer(); openManage(); });
+$('#drawerInstall').addEventListener('click',function(){ closeDrawer(); showInstallHelp(); });
+$('#logoHome').addEventListener('click',function(){ location.hash='#/'; renderChips(); route(); });
+$('#btnManage').addEventListener('click',openManage);
+
+/* ===== Tema ===== */
+function applyTheme(t){
+  document.documentElement.setAttribute('data-theme',t);
+  $('#btnTheme').textContent=(t==='dark'?'🌙':'☀️');
+  try{ localStorage.setItem(LS_THEME,t); }catch(e){}
+}
+(function(){ let t='dark'; try{ t=localStorage.getItem(LS_THEME)||'dark'; }catch(e){} applyTheme(t); })();
+$('#btnTheme').addEventListener('click',function(){ applyTheme(document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark'); });
+
+/* ===== Toast & salin ===== */
+function toast(msg){
+  const t=$('#toast'); t.textContent=msg; t.classList.add('show');
+  clearTimeout(toastT); toastT=setTimeout(function(){ t.classList.remove('show'); },2200);
+}
+function copyText(s){
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(s).then(function(){ toast('Tautan disalin ✔'); },function(){ toast('Gagal menyalin'); });
+  } else {
+    const i=document.createElement('textarea'); i.value=s; document.body.appendChild(i); i.select();
+    try{ document.execCommand('copy'); toast('Tautan disalin ✔'); }catch(e){ toast('Gagal menyalin'); }
+    i.remove();
+  }
+}
+
+/* ===== Konfirmasi ===== */
+function confirmBox(title,msg,cb){ $('#cfTitle').textContent=title; $('#cfMsg').textContent=msg; cfCb=cb; $('#mConfirm').classList.add('show'); }
+$('#cfYes').addEventListener('click',function(){ $('#mConfirm').classList.remove('show'); if(cfCb) cfCb(); cfCb=null; });
+$('#cfNo').addEventListener('click',function(){ $('#mConfirm').classList.remove('show'); cfCb=null; });
+
+/* ===== Panel kelola (PIN) ===== */
+function openManage(){
+  $('#mManage').classList.add('show');
+  if(unlocked) showPanel(); else showPin();
+}
+function showPin(){
+  $('#mgPin').style.display='block'; $('#mgPanel').style.display='none'; $('#mgForm').style.display='none';
+  $('#pinErr').classList.remove('show'); $('#pinInput').value='';
+  setTimeout(function(){ try{ $('#pinInput').focus(); }catch(e){} },60);
+}
+function showPanel(){
+  $('#mgPin').style.display='none'; $('#mgPanel').style.display='block'; $('#mgForm').style.display='none';
+  renderMgList();
+}
+function checkPin(){
+  if($('#pinInput').value===getPin()){ unlocked=true; showPanel(); }
+  else{ $('#pinErr').classList.add('show'); $('#pinInput').value=''; }
+}
+$('#pinOk').addEventListener('click',checkPin);
+$('#pinInput').addEventListener('keydown',function(e){ if(e.key==='Enter') checkPin(); });
+function renderMgList(){
+  $('#mgList').innerHTML=videos.length?videos.map(v=>
+    '<div class="mg-item">'+miniThumb(v)
+    +'<div class="t"><b>'+esc(v.title||'Tanpa judul')+'</b><span>'
+    +(v.type==='youtube'?'YouTube':'MP4')+' · '+esc(v.category||'tanpa kategori')+(v.channel?' · '+esc(v.channel):'')+'</span></div>'
+    +'<div class="ops"><button class="btn small" data-edit="'+esc(v.id)+'">✏️</button>'
+    +'<button class="btn small danger" data-del="'+esc(v.id)+'">🗑️</button></div></div>').join('')
+    : '<div class="hint">Daftar kosong. Tambah video lewat tombol "＋ Tambah Video".</div>';
+  $('#mgCount').textContent=videos.length+' video dalam daftar';
+  $('#catList').innerHTML=categories().filter(function(c){return c!=='Semua';}).map(function(c){return '<option value="'+esc(c)+'">';}).join('');
+}
+
+/* ===== Form tambah/edit ===== */
+function openForm(id){
+  editId=id||null; unlocked=true;
+  const v=id?videos.find(function(x){return x.id===id;}):null;
+  $('#formTitle').textContent=v?'✏️ Edit Video':'＋ Tambah Video';
+  $('#fUrl').value=v?v.src:''; $('#fTitle').value=v?(v.title||''):'';
+  $('#fChannel').value=v?(v.channel||''):''; $('#fCat').value=v?(v.category||''):'';
+  $('#fPoster').value=v?(v.poster||''):'';
+  $('#formErr').classList.remove('show'); updateTypeHint();
+  $('#mgPin').style.display='none'; $('#mgPanel').style.display='none'; $('#mgForm').style.display='block';
+  setTimeout(function(){ try{ $('#fUrl').focus(); }catch(e){} },60);
+}
+$('#btnAdd').addEventListener('click',function(){ openForm(null); });
+$('#btnCancelForm').addEventListener('click',showPanel);
+$('#fUrl').addEventListener('input',updateTypeHint);
+function updateTypeHint(){
+  const u=$('#fUrl').value.trim(); let t='Tipe: —';
+  if(ytId(u)) t='Tipe: YouTube ✔ (sampul diambil otomatis)';
+  else if(/^https?:\/\/.+\.(mp4|webm|m4v|mov|m3u8)(\?.*)?$/i.test(u)) t='Tipe: file video langsung ✔';
+  else if(/^https?:\/\//i.test(u)) t='Tipe: belum dikenali — pastikan link YouTube atau file .mp4';
+  $('#fType').textContent=t;
+}
+$('#btnSaveVideo').addEventListener('click',function(){
+  const url=$('#fUrl').value.trim(), title=$('#fTitle').value.trim(), err=$('#formErr');
+  err.classList.remove('show');
+  const isYt=!!ytId(url), isFile=!isYt&&/^https?:\/\/.+/i.test(url);
+  if(!url){ err.textContent='Tautan wajib diisi.'; err.classList.add('show'); return; }
+  if(!isYt&&!isFile){ err.textContent='Tautan tidak dikenali. Gunakan link YouTube atau tautan langsung file .mp4.'; err.classList.add('show'); return; }
+  if(!title){ err.textContent='Judul wajib diisi.'; err.classList.add('show'); return; }
+  const data={ type:isYt?'youtube':'file', src:url, title:title, channel:$('#fChannel').value.trim(), category:$('#fCat').value.trim(), poster:$('#fPoster').value.trim() };
+  if(editId){
+    const v=videos.find(function(x){return x.id===editId;});
+    if(v){ v.type=data.type; v.src=data.src; v.title=data.title; v.channel=data.channel; v.category=data.category; v.poster=data.poster; }
+    toast('Perubahan disimpan ✔');
+  } else {
+    data.id=uid(); data.added=Date.now(); videos.push(data); toast('Video ditambahkan ✔');
+  }
+  saveVideos(); renderChips(); route(); showPanel();
+});
+$('#btnMeta').addEventListener('click',async function(){
+  const url=$('#fUrl').value.trim(), yid=ytId(url);
+  $('#formErr').classList.remove('show');
+  if(!yid){ toast('Bukan link YouTube — isi judul manual.'); return; }
+  toast('Mengambil info judul…');
+  const eps=['https://www.youtube.com/oembed?url='+encodeURIComponent(watchUrl(yid))+'&format=json',
+             'https://noembed.com/embed?url='+encodeURIComponent(watchUrl(yid))];
+  for(let i=0;i<eps.length;i++){
+    try{
+      const r=await fetch(eps[i]); if(!r.ok) continue;
+      const d=await r.json();
+      if(d&&d.title){ $('#fTitle').value=d.title; if(d.author_name) $('#fChannel').value=d.author_name; toast('Judul terisi otomatis ✔'); return; }
+    }catch(e){}
+  }
+  toast('Tidak bisa mengambil judul (butuh internet) — isi manual.');
+});
+
+/* ===== Ekspor / impor / reset / PIN ===== */
+$('#btnExport').addEventListener('click',function(){
+  const blob=new Blob([JSON.stringify(videos,null,2)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='tontonku-data.json';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(function(){ URL.revokeObjectURL(a.href); },1000);
+  toast('Data diekspor ✔');
+});
+$('#btnImport').addEventListener('click',function(){ $('#fileImport').click(); });
+$('#fileImport').addEventListener('change',function(e){
+  const f=e.target.files[0]; if(!f) return;
+  const rd=new FileReader();
+  rd.onload=function(){
+    try{
+      const arr=JSON.parse(rd.result);
+      if(!Array.isArray(arr)) throw new Error('bad');
+      const ok=arr.filter(function(x){return x&&x.src&&x.title;});
+      if(!ok.length) throw new Error('bad');
+      confirmBox('Impor data?', ok.length+' video akan MENGGANTI daftar saat ini.', function(){
+        videos=ok.map(function(x){ return { id:String(x.id||uid()), type:ytId(x.src)?'youtube':'file', src:String(x.src), title:String(x.title), channel:String(x.channel||''), category:String(x.category||''), poster:String(x.poster||'') }; });
+        saveVideos(); renderMgList(); renderChips(); route(); toast('Impor berhasil ✔');
+      });
+    }catch(err){ toast('File JSON tidak valid'); }
+    e.target.value='';
+  };
+  rd.readAsText(f);
+});
+$('#btnReset').addEventListener('click',function(){
+  confirmBox('Reset daftar?','Semua video akan dikembalikan ke daftar awal bawaan aplikasi.',function(){
+    videos=JSON.parse(JSON.stringify(DEFAULT_VIDEOS)); saveVideos(); renderMgList(); renderChips(); route(); toast('Daftar direset ✔');
+  });
+});
+$('#btnPin').addEventListener('click',function(){
+  const p1=prompt('PIN baru (4–8 huruf/angka):');
+  if(p1===null) return;
+  if(!/^[A-Za-z0-9]{4,8}$/.test(p1)){ toast('PIN harus 4–8 karakter huruf/angka'); return; }
+  const p2=prompt('Ulangi PIN baru:');
+  if(p2===null) return;
+  if(p1!==p2){ toast('Kedua PIN tidak sama'); return; }
+  try{ localStorage.setItem(LS_PIN,p1); toast('PIN berhasil diubah ✔'); }catch(e){ toast('Gagal menyimpan PIN'); }
+});
+
+/* ===== Install PWA ===== */
+function showInstallHelp(){
+  if(installEvt){ installEvt.prompt(); installEvt=null; return; }
+  const b=$('#installBody'), ua=navigator.userAgent;
+  if(isIOS()){
+    b.innerHTML='<p>Di <b>iPhone / iPad</b> (wajib lewat Safari):</p><ol>'
+      +'<li>Buka aplikasi ini di <b>Safari</b>.</li><li>Ketuk tombol <b>Bagikan</b> (kotak dengan panah ke atas ⬆︎).</li>'
+      +'<li>Gulir dan pilih <b>"Tambah ke Layar Utama"</b>.</li><li>Ketuk <b>Tambah</b> — ikon aplikasi muncul di layar utama.</li></ol>';
+  } else if(/android/i.test(ua)){
+    b.innerHTML='<p>Di <b>Android</b> (lewat Chrome):</p><ol>'
+      +'<li>Ketuk menu <b>⋮</b> di pojok kanan atas.</li><li>Pilih <b>"Tambahkan ke layar utama"</b> atau <b>"Instal aplikasi"</b>.</li>'
+      +'<li>Konfirmasi — selesai! Ikon aplikasi muncul di layar utama.</li></ol>';
+  } else {
+    b.innerHTML='<p>Di <b>komputer</b> (Chrome / Edge):</p><ol>'
+      +'<li>Lihat address bar: klik ikon <b>install ⬇︎</b> di sisi kanan.</li>'
+      +'<li>Atau menu <b>⋮ → Install "TontonKu"…</b></li><li>Aplikasi terbuka di jendela sendiri seperti aplikasi biasa.</li></ol>'
+      +'<p class="hint">Catatan: menu install baru muncul setelah aplikasi di-hosting online (https) — lihat PETUNJUK.txt. Saat dibuka langsung dari file (file://), gunakan "Buat pintasan" sebagai gantinya.</p>';
+  }
+  $('#mInstall').classList.add('show');
+}
+window.addEventListener('beforeinstallprompt',function(e){
+  e.preventDefault(); installEvt=e;
+  const b=$('#btnInstall'); b.style.display='inline-flex';
+  b.onclick=function(){ installEvt.prompt(); };
+});
+$('#btnInstall').addEventListener('click',function(){ if(installEvt) installEvt.prompt(); else showInstallHelp(); });
+
+/* ===== Init ===== */
+renderChips();
+route();
+if('serviceWorker' in navigator && (location.protocol==='https:'||location.hostname==='localhost'||location.hostname==='127.0.0.1')){
+  const swReg=function(){ navigator.serviceWorker.register('sw.js').catch(function(){}); };
+  if(document.readyState==='complete') swReg(); else window.addEventListener('load',swReg);
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,131 @@
+================================================================
+  TONTONKU — PANDUAN LENGKAP
+  Aplikasi tontonan pribadi (mirip YouTube, tapi HANYA video
+  pilihan Anda yang tampil — tanpa rekomendasi dari luar)
+================================================================
+
+ISI PAKET
+---------
+  index.html      -> aplikasi utama (HTML+CSS+JS dalam SATU file)
+  manifest.json   -> data aplikasi agar bisa di-install (PWA)
+  sw.js           -> penyimpan offline (aplikasi tetap terbuka tanpa internet)
+  icons/          -> ikon aplikasi
+  PETUNJUK.txt    -> file ini
+
+YANG AKAN USER LIHAT
+--------------------
+  - Hanya video yang ADA DI DAFTAR ANDA (grid beranda + pencarian
+    + filter kategori). Tidak ada video lain, tidak ada rekomendasi,
+    tidak ada "naik berikutnya" dari YouTube.
+  - Video YouTube diputar lewat youtube-nocookie (tanpa cookie pelacak
+    YouTube & tanpa baris rekomendasi di bawah pemutar); file .mp4
+    diputar lewat pemutar bawaan browser.
+
+===============================================================
+  CARA 1 — GANTI DAFTAR VIDEO LANGSUNG DI KODE (paling cepat)
+===============================================================
+Buka index.html dengan text editor (Notepad/VS Code), cari bagian:
+
+  ★ DAFTAR VIDEO ANDA — EDIT BAGIAN INI ★
+
+Di sana ada daftar seperti:
+
+  { id:'v1', type:'youtube', src:'https://www.youtube.com/watch?v=XXXXXXXXXXX',
+    title:'Judul tampil', channel:'Nama channel', category:'Kategori', poster:'' },
+
+Cara pakai:
+  - type:'youtube'  -> src = link YouTube biasa (watch?v=..., youtu.be/...,
+                       shorts/..., embed/... semua bisa; thumbnail diambil otomatis)
+  - type:'file'     -> src = tautan langsung file .mp4 (hosting sendiri / Google Drive
+                       direct link), boleh isi poster:'link-gambar.jpg' untuk sampul
+  - id              -> teks unik bebas (jangan sama antar video)
+  - category        -> bebas (membuat chip filter otomatis); kosongkan '' jika tak perlu
+  - Hapus baris contoh, ganti dengan video Anda. Tambah baris baru
+    dengan format yang sama untuk setiap video.
+
+Simpan file, selesai.
+
+===============================================================
+  CARA 2 — KELOLA LANGSUNG DI APLIKASI (tanpa edit kode)
+===============================================================
+1. Klik ikon ⚙️ (pojok kanan atas) atau menu ☰ → "Kelola Video".
+2. Masukkan PIN. PIN AWAL: 1234  (segera ganti: tombol 🔑 Ubah PIN).
+3. Di panel kelola Anda bisa:
+   - ＋ Tambah Video  : tempel link YouTube / .mp4, isi judul & kategori.
+                        Tombol "✨ Ambil judul otomatis" mengisi judul & nama
+                        channel dari link YouTube (butuh internet).
+   - ✏️ Edit / 🗑️ Hapus video mana pun.
+   - ⬇︎ Ekspor        : unduh seluruh daftar sebagai tontonku-data.json
+                        (untuk cadangan / dipakai di perangkat lain).
+   - ⬆︎ Impor         : muat file tontonku-data.json (MENGGANTI daftar aktif).
+   - ↺ Reset          : kembalikan ke daftar contoh bawaan.
+4. Daftar yang dikelola lewat panel tersimpan di penyimpanan browser
+   (localStorage) perangkat tersebut. Untuk pengunjung lain, daftar awal
+   tetap yang ada di index.html — jadi jika ingin SEMUA pengunjung melihat
+   daftar tertentu, gunakan CARA 1 atau bagikan file hasil Ekspor.
+
+===============================================================
+  HOSTING (WAJIB agar tombol "Install" aktif)
+===============================================================
+PWA bisa di-install hanya jika diakses lewat https. Pilih salah satu
+(dua opsi pertama gratis):
+
+A) NETLIFY DROP — paling cepat, tanpa ribet
+   1. Buka https://app.netlify.com/drop
+   2. Daftar/login gratis, lalu drag-drop FOLDER aplikasi ini
+      (atau file ZIP-nya) ke halaman tersebut.
+   3. Dalam beberapa detik aplikasi online di alamat seperti
+      https://nama-anda.netlify.app
+   4. Buka alamat itu di Chrome/HP — tombol Install akan tersedia.
+
+B) GITHUB PAGES
+   1. Buat akun/akun GitHub, buat repository baru (mis. tontonku).
+   2. Upload semua file (index.html, manifest.json, sw.js, icons/).
+   3. Settings → Pages → Branch: main → Save.
+   4. Aplikasi online di https://username.github.io/tontonku/
+
+C) HOSTING SENDIRI
+   Upload folder ini ke hosting apa pun (cPanel/VPS) sebagai situs statis.
+   Pastikan diakses lewat https dan index.html berada di root.
+
+===============================================================
+  CARA INSTALL DI PERANGKAT
+===============================================================
+ANDROID (Chrome):
+  1. Buka alamat aplikasi di Chrome.
+  2. Ketuk menu ⋮ → "Instal aplikasi" / "Tambahkan ke layar utama".
+  3. Ikon TontonKu muncul di layar utama; terbuka layar penuh
+     seperti aplikasi biasa.
+
+IPHONE / IPAD (Safari):
+  1. Buka alamat aplikasi di Safari.
+  2. Ketuk tombol Bagikan (kotak dengan panah ⬆︎).
+  3. Pilih "Tambah ke Layar Utama" → Tambah.
+
+KOMPUTER (Chrome / Edge):
+  1. Buka alamat aplikasi.
+  2. Klik ikon install (⬇︎) di address bar, atau menu ⋮ → Install
+     "TontonKu".
+  3. Aplikasi terbuka di jendela sendiri + muncul di Start Menu /
+     desktop.
+
+CATATAN: jika dibuka langsung dari file (klik dua kali index.html,
+alamat diawali file://), fitur install sistem operasi tidak aktif —
+tapi aplikasi tetap berfungsi penuh. Untuk pengalaman penuh, host
+online dulu (bagian HOSTING di atas).
+
+===============================================================
+  CATATAN TEKNIS
+===============================================================
+- Offline: halaman & navigasi tetap jalan tanpa internet (sw.js).
+  Video YouTube tetap butuh internet; file .mp4 ikut ter-cache jika
+  pernah dibuka (tergantung browser/hosting mengizinkan).
+- Thumbnail YouTube diambil dari i.ytimg.com; jika tampil kosong,
+  otomatis diganti kotak "▶".
+- Privasi: pemutar memakai youtube-nocookie.com sehingga YouTube
+  tidak menempatkan cookie pelacak saat video diputar di aplikasi.
+- Mengubah nama aplikasi: edit "name"/"short_name" di manifest.json
+  dan judul di dalam index.html.
+- Mengubah PIN awal di kode: cari DEFAULT_PIN di index.html.
+
+Selamat menonton! 🎬
