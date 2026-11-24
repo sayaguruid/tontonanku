@@ -22,6 +22,13 @@ YANG AKAN USER LIHAT
     yang bisa diklik — pengunjung tidak bisa melihat atau melompat ke
     tautan aslinya. Kontrol yang tersedia: putar/jeda, video
     sebelumnya/berikutnya, geser waktu, suara, layar penuh.
+  - IKLAN: jika video menyertakan iklan yang bisa dilewati, tombol
+    "Skip / Lewati iklan" TETAP BISA DIKLIK — pojok kanan bawah
+    pemutar dibiarkan tembus khusus untuk tombol tersebut, dan
+    kontrol aplikasi otomatis menyembunyikan diri saat video berjalan
+    agar tidak menutupinya. Lubang ini hanya terbuka selama video
+    berjalan; saat jeda atau mendekati akhir video, lubang tertutup
+    lagi (tetap anti-lompat ke YouTube).
   - File .mp4 diputar lewat pemutar bawaan browser.
   - AUTOPLAY: saat sebuah video selesai, aplikasi otomatis pindah ke
     video berikutnya dalam daftar (setelah video terakhir, kembali
@@ -129,9 +136,15 @@ online dulu (bagian HOSTING di atas).
 - Thumbnail YouTube diambil dari i.ytimg.com; jika tampil kosong,
   otomatis diganti kotak "▶".
 - Privasi & anti-lompat: pemutar memakai YouTube IFrame API dengan
-  kontrol kustom; klik ke dalam video YouTube dimatikan
-  (pointer-events:none) sehingga tidak ada tombol/logo YouTube yang
-  bisa diklik untuk keluar ke situs/tautan aslinya.
+  kontrol kustom; seluruh area pemutar ditutup pembatas klik KECUALI
+  lubang kecil di pojok kanan bawah yang hanya terbuka selama video
+  berjalan (khusus tombol Skip iklan). Saat jeda atau menjelang akhir
+  video (area endscreen), lubang otomatis tertutup sehingga tidak ada
+  elemen YouTube yang bisa diklik untuk keluar ke tautan aslinya.
+- Kontrol aplikasi di bawah pemutar otomatis tersembunyi saat video
+  berjalan dan mouse/tangan sedang tidak bergerak (muncul lagi saat
+  mouse digerakkan / layar disentuh / video dijeda) — sekaligus agar
+  tombol Skip iklan tidak tertutup.
 - Autoplay diblokir? Sebagian browser memblokir pemutaran bersuara
   otomatis. Jika terjadi, aplikasi otomatis memutar senyap dan
   menampilkan tombol "🔇 Ketuk untuk suara" — ketuk sekali untuk

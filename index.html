@@ -118,13 +118,21 @@ main{padding:1rem; max-width:1600px; margin:0 auto}
   background:#000; display:flex; align-items:center; justify-content:center;
 }
 .player iframe,.player video{position:absolute; inset:0; width:100%; height:100%; border:0}
-/* pemutar YouTube kustom: iframe tidak bisa diklik (mencegah lompat ke YouTube) */
-.player.yt iframe{pointer-events:none}
+/* pemutar YouTube kustom: klik ke YouTube diblokir di seluruh area KECUALI lubang
+   "Skip iklan" di pojok kanan bawah (terbuka saat video berjalan, tertutup saat jeda/menjelang akhir) */
+.player.yt iframe{pointer-events:auto}
 .yt-click{position:absolute; inset:0; z-index:2; cursor:pointer; background:transparent}
+#ytClickTop{inset:0 0 90px 0}
+#ytClickBL{inset:auto 170px 0 0; width:calc(100% - 170px); height:90px}
 .yt-bar{
   position:absolute; left:0; right:0; bottom:0; z-index:3; display:flex; align-items:center; gap:.35rem;
-  padding:.45rem .6rem; background:linear-gradient(transparent,rgba(0,0,0,.78)); pointer-events:auto;
+  padding:.45rem .6rem; padding-right:118px; background:linear-gradient(transparent,rgba(0,0,0,.78)); pointer-events:none;
+  transition:opacity .25s, transform .25s;
 }
+.player.yt.barnone .yt-bar{opacity:0; transform:translateY(12px)}
+.player.yt.barnone .yt-bar .yb-btn,
+.player.yt.barnone .yt-bar .yt-seek{pointer-events:none}
+.yt-bar .yb-btn,.yt-bar .yt-seek{pointer-events:auto}
 .yb-btn{
   background:rgba(255,255,255,.14); border:0; color:#fff; width:34px; height:34px; border-radius:50%;
   cursor:pointer; font-size:14px; display:inline-flex; align-items:center; justify-content:center; flex:0 0 auto; padding:0;
@@ -477,6 +485,8 @@ function renderWatch(id){
     player=yid
       ? '<div class="player yt" id="ytWrap"><div id="ytFrame"></div>'
         +'<div class="yt-click" id="ytClick" title="Putar / Jeda"></div>'
+        +'<div class="yt-click" id="ytClickTop" title="Putar / Jeda" style="display:none"></div>'
+        +'<div class="yt-click" id="ytClickBL" title="Putar / Jeda" style="display:none"></div>'
         +'<button class="yt-hint" id="ytHint" style="display:none">🔇 Ketuk untuk suara</button>'
         +'<div class="yt-bar">'
         +'<button class="yb-btn" id="ybPlay" title="Putar / Jeda">⏸</button>'
@@ -542,12 +552,14 @@ function setupYT(v,yid){
   const bar={
     play:$('#ybPlay'), prev:$('#ybPrev'), next:$('#ybNext'), mute:$('#ybMute'),
     full:$('#ybFull'), seek:$('#ytSeek'), fill:$('#ytFill'), time:$('#ytTime'),
-    click:$('#ytClick'), hint:$('#ytHint')
+    click:$('#ytClick'), clickTop:$('#ytClickTop'), clickBL:$('#ytClickBL'), hint:$('#ytHint')
   };
   function toggle(){ if(!ytPlayer||!ytPlayer.getPlayerState) return; try{ (ytPlayer.getPlayerState()===1)?ytPlayer.pauseVideo():ytPlayer.playVideo(); }catch(e){} }
   function goRel(n){ if(n) location.hash='#/watch/'+encodeURIComponent(n.id); }
   function unMute(){ try{ ytPlayer.unMute(); mutedForced=false; }catch(e){} }
   bar.click.onclick=toggle;
+  bar.clickTop.onclick=toggle;
+  bar.clickBL.onclick=toggle;
   bar.play.onclick=toggle;
   bar.prev.onclick=function(){ goRel(neighbor(cur,-1)); };
   bar.next.onclick=function(){ goRel(neighbor(cur,1)); };
@@ -567,6 +579,19 @@ function setupYT(v,yid){
     try{ if(ytPlayer.isMuted()) unMute(); else ytPlayer.mute(); }catch(e){}
   };
   bar.hint.onclick=unMute;
+  // Lubang klik "Skip iklan" (pojok kanan bawah) + auto-hide kontrol aplikasi
+  let lastAct=Date.now();
+  const wrap=$('#ytWrap');
+  ['pointermove','pointerdown','touchstart'].forEach(function(ev){
+    if(wrap) wrap.addEventListener(ev,function(){ lastAct=Date.now(); },{passive:true});
+  });
+  function setHole(open){
+    const t=$('#ytClickTop'), b=$('#ytClickBL'), f=$('#ytClick');
+    if(!t||!b||!f) return;
+    t.style.display=open?'block':'none';
+    b.style.display=open?'block':'none';
+    f.style.display=open?'none':'block';
+  }
   function refreshIcons(){
     if(!ytPlayer||!ytPlayer.getPlayerState) return;
     let st=-1, mu=false, d=0, c=0;
@@ -578,6 +603,11 @@ function setupYT(v,yid){
     bar.hint.style.display=(mutedForced&&mu)?'block':'none';
     bar.fill.style.width=(d?Math.min(100,c/d*100):0)+'%';
     bar.time.textContent=fmtTime(c)+' / '+fmtTime(d);
+    // kontrol disembunyikan saat video berjalan & mouse sedang tidak bergerak
+    const showBar=(st!==1)||(Date.now()-lastAct<2600);
+    if(wrap) wrap.classList.toggle('barnone',!showBar);
+    // lubang skip hanya saat video/iklan berjalan dan belum menjelang akhir (area endscreen)
+    setHole(st===1 && d>0 && (d-c)>22);
   }
   if(ytPoll) clearInterval(ytPoll);
   ytPoll=setInterval(refreshIcons,500);
