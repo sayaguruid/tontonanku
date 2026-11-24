@@ -118,6 +118,26 @@ main{padding:1rem; max-width:1600px; margin:0 auto}
   background:#000; display:flex; align-items:center; justify-content:center;
 }
 .player iframe,.player video{position:absolute; inset:0; width:100%; height:100%; border:0}
+/* pemutar YouTube kustom: iframe tidak bisa diklik (mencegah lompat ke YouTube) */
+.player.yt iframe{pointer-events:none}
+.yt-click{position:absolute; inset:0; z-index:2; cursor:pointer; background:transparent}
+.yt-bar{
+  position:absolute; left:0; right:0; bottom:0; z-index:3; display:flex; align-items:center; gap:.35rem;
+  padding:.45rem .6rem; background:linear-gradient(transparent,rgba(0,0,0,.78)); pointer-events:auto;
+}
+.yb-btn{
+  background:rgba(255,255,255,.14); border:0; color:#fff; width:34px; height:34px; border-radius:50%;
+  cursor:pointer; font-size:14px; display:inline-flex; align-items:center; justify-content:center; flex:0 0 auto; padding:0;
+}
+.yb-btn:hover{background:rgba(255,255,255,.3)}
+.yt-seek{flex:1 1 auto; min-width:50px; height:20px; display:flex; align-items:center; cursor:pointer}
+.yt-seek .trk{width:100%; height:4px; background:rgba(255,255,255,.28); border-radius:2px; position:relative; overflow:hidden}
+.yt-seek .fill{position:absolute; left:0; top:0; bottom:0; width:0; background:var(--accent); border-radius:2px}
+.yt-time{color:#fff; font-size:.72rem; flex:0 0 auto; font-variant-numeric:tabular-nums; text-shadow:0 1px 2px rgba(0,0,0,.8)}
+.yt-hint{
+  position:absolute; top:.6rem; right:.6rem; z-index:3; background:rgba(0,0,0,.78); color:#fff;
+  font-size:.75rem; font-weight:600; padding:.35rem .7rem; border-radius:999px; cursor:pointer; border:0;
+}
 .watch h1{font-size:1.25rem; margin:.8rem 0 .3rem; line-height:1.35}
 .watch .byline{color:var(--text2); font-size:.88rem; margin-bottom:.8rem}
 .actions{display:flex; flex-wrap:wrap; gap:.5rem; margin:.6rem 0 1rem}
@@ -329,12 +349,11 @@ footer{color:var(--text2); text-align:center; padding:2rem 1rem; font-size:.78re
    Anda juga bisa menambah/hapus lewat tombol ⚙️ di aplikasi (PIN awal: 1234).
 ===================================================================== */
 const DEFAULT_VIDEOS = [
-  { id:'v1', type:'youtube', src:'https://www.youtube.com/watch?v=aqz-KE-bpKQ', title:'Big Buck Bunny — film animasi pendek (contoh)', channel:'Blender', category:'Contoh', poster:'' },
-  { id:'v2', type:'youtube', src:'https://www.youtube.com/watch?v=jNQXAC9IVRw', title:'Video pertama di YouTube: "Me at the zoo" (contoh)', channel:'jawed', category:'Contoh', poster:'' },
-  { id:'v3', type:'file', src:'https://media.w3.org/2010/05/bunny/trailer.mp4', title:'Big Buck Bunny — trailer MP4 (contoh)', channel:'Blender', category:'Contoh', poster:'' },
-  { id:'v4', type:'file', src:'https://media.w3.org/2010/05/sintel/trailer.mp4', title:'Sintel — trailer MP4 (contoh)', channel:'Blender', category:'Contoh', poster:'' },
-  { id:'v5', type:'file', src:'https://mdn.github.io/shared-assets/videos/flower.mp4', title:'Bunga — MP4 langsung (contoh)', channel:'MDN', category:'Contoh', poster:'' },
-  { id:'v6', type:'file', src:'https://media.w3.org/2010/05/video/movie_300.mp4', title:'Video contoh W3C — MP4 langsung (contoh)', channel:'W3C', category:'Contoh', poster:'' }
+  { id:'v1', type:'youtube', src:'https://www.youtube.com/watch?v=J3FxJnCPE10', title:'Kisah Tragis Domba Emas dalam Mitologi Yunani! Pengorbanan Putri Helle | Dongeng Bahasa Indonesia', channel:'Riri - Magic Tales Everywhere', category:'Dongeng', poster:'' },
+  { id:'v2', type:'youtube', src:'https://www.youtube.com/watch?v=AF6Uhjld33U', title:'Buaya Hamil Melawan Ular Raksasa! Kisah Legenda dari Maluku - Perjuangan Heroik Buaya Learissa', channel:'Riri - Magic Tales Everywhere', category:'Dongeng', poster:'' },
+  { id:'v3', type:'youtube', src:'https://www.youtube.com/watch?v=LODlI7zj-as', title:'Api Kemarahan Sang Dewi Api, Hestia | Dongeng Yunani | Cerita Rakyat dan Kisah Nusantara', channel:'Riri - Magic Tales Everywhere', category:'Dongeng', poster:'' },
+  { id:'v4', type:'youtube', src:'https://www.youtube.com/watch?v=3jMBYNGi56E', title:'Legenda Penunggang Kuda Tanpa Kepala! Ada Apa di Balik Kabut Sleepy Hollow? - Riri Magic Tales', channel:'Riri - Magic Tales Everywhere', category:'Dongeng', poster:'' },
+  { id:'v5', type:'youtube', src:'https://www.youtube.com/watch?v=qg6538UnG3w', title:'Riri Kehilangan Ingatan! Bola Kristal Pencuri Kenangan! | Dongeng Bahasa Indonesia | Cerita Rakyat', channel:'Riri - Magic Tales Everywhere', category:'Dongeng', poster:'' }
 ];
 
 /* ===== Penyimpanan ===== */
@@ -417,11 +436,32 @@ function renderHome(){
     ? '<div class="grid">'+list.map(cardHTML).join('')+'</div>'
     : '<div class="empty"><div class="big">📭</div><p><b>Tidak ada video.</b></p><p>Tambahkan lewat tombol ⚙️ (Kelola Video), atau ubah daftar langsung di file index.html.</p></div>';
 }
+/* Urutan pemutaran: video sekategori lebih dulu, lalu sisanya sesuai urutan daftar */
+function orderedOthers(v){
+  const same=videos.filter(x=>x.id!==v.id && x.category && x.category===v.category);
+  const ids={}; same.forEach(x=>ids[x.id]=1);
+  return same.concat(videos.filter(x=>x.id!==v.id && !ids[x.id]));
+}
+function neighbor(v,dir){
+  const list=orderedOthers(v);
+  if(!list.length) return null;
+  return dir>0 ? list[0] : list[list.length-1];
+}
+function autoNext(v){
+  const n=neighbor(v,1);
+  if(n){ location.hash='#/watch/'+encodeURIComponent(n.id); return; }
+  // hanya ada satu video: ulangi dari awal
+  if(v.type==='youtube'&&ytPlayer){ try{ ytPlayer.seekTo(0,true); ytPlayer.playVideo(); }catch(e){} }
+  else{ const vid=$('#view').querySelector('video'); if(vid){ try{ vid.currentTime=0; vid.play(); }catch(e){} } }
+}
+function fmtTime(s){
+  s=Math.max(0,Math.floor(s||0));
+  const h=Math.floor(s/3600), m=Math.floor((s%3600)/60), r=s%60;
+  const mm=((m<10&&h)?'0':'')+m, ss=(r<10?'0':'')+r;
+  return (h?h+':'+mm:m)+':'+ss;
+}
 function relHTML(cur){
-  const same=videos.filter(v=>v.id!==cur.id && v.category && v.category===cur.category);
-  const ids={}; same.forEach(v=>ids[v.id]=1);
-  const rest=videos.filter(v=>v.id!==cur.id && !ids[v.id]);
-  const items=same.concat(rest).slice(0,12);
+  const items=orderedOthers(cur).slice(0,12);
   if(!items.length) return '<div class="hint" style="margin-top:1rem">Belum ada video lain di daftar.</div>';
   return '<div class="rel-title">Tontonan lain</div>'+items.map(v=>
     '<button class="rel-item" data-go="'+esc(v.id)+'"><div class="rt">'+thumbInner(v)+'</div><div><b>'+esc(v.title||'Tanpa judul')
@@ -435,27 +475,39 @@ function renderWatch(id){
   if(v.type==='youtube'){
     const yid=ytId(v.src);
     player=yid
-      ? '<div class="player"><iframe src="https://www.youtube-nocookie.com/embed/'+yid+'?autoplay=1&rel=0&modestbranding=1" title="'+esc(v.title)+'" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></div>'
+      ? '<div class="player yt" id="ytWrap"><div id="ytFrame"></div>'
+        +'<div class="yt-click" id="ytClick" title="Putar / Jeda"></div>'
+        +'<button class="yt-hint" id="ytHint" style="display:none">🔇 Ketuk untuk suara</button>'
+        +'<div class="yt-bar">'
+        +'<button class="yb-btn" id="ybPlay" title="Putar / Jeda">⏸</button>'
+        +'<button class="yb-btn" id="ybPrev" title="Video sebelumnya">⏮</button>'
+        +'<button class="yb-btn" id="ybNext" title="Video berikutnya">⏭</button>'
+        +'<div class="yt-seek" id="ytSeek" title="Geser waktu"><div class="trk"><div class="fill" id="ytFill"></div></div></div>'
+        +'<span class="yt-time" id="ytTime">0:00</span>'
+        +'<button class="yb-btn" id="ybMute" title="Hidupkan / matikan suara">🔊</button>'
+        +'<button class="yb-btn" id="ybFull" title="Layar penuh">⛶</button>'
+        +'</div></div>'
       : '<div class="empty">Link YouTube tidak valid.</div>';
   } else {
     player='<div class="player"><video src="'+esc(v.src)+'" '+(v.poster?'poster="'+esc(v.poster)+'" ':'')+'controls playsinline preload="metadata"></video></div>';
   }
-  const openBtn=(v.type==='youtube'&&ytId(v.src))?'<a class="btn ghost" href="'+watchUrl(ytId(v.src))+'" target="_blank" rel="noopener">↗ Buka di YouTube</a>':'';
   $('#view').innerHTML=
     '<div class="back-row"><button class="btn ghost" data-nav>← Kembali</button></div>'
     +'<div class="watch"><div>'+player
     +'<h1>'+esc(v.title||'Tanpa judul')+'</h1>'
     +'<div class="byline">'+esc(v.channel||'—')+(v.category?' · '+esc(v.category):'')+'</div>'
-    +'<div class="actions"><button class="btn" id="btnCopy">🔗 Salin tautan</button>'+openBtn+'</div>'
     +'</div><div>'+relHTML(v)+'</div></div>';
-  const cp=$('#btnCopy');
-  if(cp) cp.onclick=function(){ copyText(v.type==='youtube'&&ytId(v.src)?watchUrl(ytId(v.src)):v.src); };
+  if(v.type==='youtube'&&ytId(v.src)) setupYT(v, ytId(v.src));
   const vid=$('#view').querySelector('video');
-  if(vid){ const p=vid.play(); if(p&&p.catch) p.catch(function(){}); }
+  if(vid){
+    const p=vid.play(); if(p&&p.catch) p.catch(function(){});
+    vid.addEventListener('ended',function(){ autoNext(v); });
+  }
 }
 
 /* ===== Router ===== */
 function route(){
+  cleanupYT();
   const h=location.hash||'#/';
   const m=h.match(/^#\/watch\/(.+)$/);
   if(m) renderWatch(decodeURIComponent(m[1])); else renderHome();
@@ -463,6 +515,98 @@ function route(){
   closeDrawer();
 }
 window.addEventListener('hashchange',route);
+
+/* ===== Pemutar YouTube kustom (tanpa UI YouTube — tidak bisa klik keluar) ===== */
+let ytPlayer=null, ytPoll=null, ytToken=0, ytApiQueue=[], mutedForced=false;
+function cleanupYT(){
+  ytToken++;
+  if(ytPoll){ clearInterval(ytPoll); ytPoll=null; }
+  if(ytPlayer){ try{ ytPlayer.destroy(); }catch(e){} ytPlayer=null; }
+  mutedForced=false;
+}
+function ensureYTAPI(cb){
+  if(window.YT&&window.YT.Player){ cb(); return; }
+  ytApiQueue.push(cb);
+  if(!window.onYouTubeIframeAPIReady){
+    window.onYouTubeIframeAPIReady=function(){
+      const q=ytApiQueue.slice(); ytApiQueue=[];
+      q.forEach(function(f){ f(); });
+    };
+    const s=document.createElement('script');
+    s.src='https://www.youtube.com/iframe_api';
+    document.head.appendChild(s);
+  }
+}
+function setupYT(v,yid){
+  const tok=++ytToken, cur=v;
+  const bar={
+    play:$('#ybPlay'), prev:$('#ybPrev'), next:$('#ybNext'), mute:$('#ybMute'),
+    full:$('#ybFull'), seek:$('#ytSeek'), fill:$('#ytFill'), time:$('#ytTime'),
+    click:$('#ytClick'), hint:$('#ytHint')
+  };
+  function toggle(){ if(!ytPlayer||!ytPlayer.getPlayerState) return; try{ (ytPlayer.getPlayerState()===1)?ytPlayer.pauseVideo():ytPlayer.playVideo(); }catch(e){} }
+  function goRel(n){ if(n) location.hash='#/watch/'+encodeURIComponent(n.id); }
+  function unMute(){ try{ ytPlayer.unMute(); mutedForced=false; }catch(e){} }
+  bar.click.onclick=toggle;
+  bar.play.onclick=toggle;
+  bar.prev.onclick=function(){ goRel(neighbor(cur,-1)); };
+  bar.next.onclick=function(){ goRel(neighbor(cur,1)); };
+  bar.full.onclick=function(){
+    const w=$('#ytWrap');
+    if(document.fullscreenElement){ if(document.exitFullscreen) document.exitFullscreen(); }
+    else if(w&&w.requestFullscreen) w.requestFullscreen();
+  };
+  bar.seek.onclick=function(e){
+    if(!ytPlayer||!ytPlayer.getDuration) return;
+    const r=e.currentTarget.getBoundingClientRect();
+    const t=(e.clientX-r.left)/r.width;
+    try{ ytPlayer.seekTo(Math.max(0,Math.min(1,t))*ytPlayer.getDuration(),true); }catch(err){}
+  };
+  bar.mute.onclick=function(){
+    if(!ytPlayer||!ytPlayer.isMuted) return;
+    try{ if(ytPlayer.isMuted()) unMute(); else ytPlayer.mute(); }catch(e){}
+  };
+  bar.hint.onclick=unMute;
+  function refreshIcons(){
+    if(!ytPlayer||!ytPlayer.getPlayerState) return;
+    let st=-1, mu=false, d=0, c=0;
+    try{ st=ytPlayer.getPlayerState(); }catch(e){}
+    try{ mu=ytPlayer.isMuted(); }catch(e){}
+    try{ d=ytPlayer.getDuration()||0; c=ytPlayer.getCurrentTime()||0; }catch(e){}
+    bar.play.textContent=(st===1)?'⏸':'▶';
+    bar.mute.textContent=mu?'🔇':'🔊';
+    bar.hint.style.display=(mutedForced&&mu)?'block':'none';
+    bar.fill.style.width=(d?Math.min(100,c/d*100):0)+'%';
+    bar.time.textContent=fmtTime(c)+' / '+fmtTime(d);
+  }
+  if(ytPoll) clearInterval(ytPoll);
+  ytPoll=setInterval(refreshIcons,500);
+  ensureYTAPI(function(){
+    if(tok!==ytToken||!$('#ytWrap')) return; // pengguna sudah pindah halaman
+    const vars={ autoplay:1, controls:0, rel:0, modestbranding:1, iv_load_policy:3, disablekb:1, playsinline:1, fs:0 };
+    if(location.protocol.indexOf('http')===0) vars.origin=location.origin;
+    ytPlayer=new YT.Player('ytFrame',{
+      videoId:yid,
+      playerVars:vars,
+      events:{
+        onReady:function(){
+          refreshIcons();
+          try{ ytPlayer.playVideo(); }catch(e){}
+          // jika autoplay bersuara diblokir browser: putar senyap + tampilkan petunjuk
+          setTimeout(function(){
+            if(tok!==ytToken||!ytPlayer||!ytPlayer.getPlayerState) return;
+            let st=-1; try{ st=ytPlayer.getPlayerState(); }catch(e){}
+            if(st!==1){ try{ ytPlayer.mute(); ytPlayer.playVideo(); mutedForced=true; }catch(e){} }
+          },1600);
+        },
+        onStateChange:function(e){
+          refreshIcons();
+          if(e.data===window.YT.PlayerState.ENDED) autoNext(cur);
+        }
+      }
+    });
+  });
+}
 
 /* ===== Delegasi klik ===== */
 document.addEventListener('click',function(e){
@@ -521,16 +665,6 @@ function toast(msg){
   const t=$('#toast'); t.textContent=msg; t.classList.add('show');
   clearTimeout(toastT); toastT=setTimeout(function(){ t.classList.remove('show'); },2200);
 }
-function copyText(s){
-  if(navigator.clipboard&&navigator.clipboard.writeText){
-    navigator.clipboard.writeText(s).then(function(){ toast('Tautan disalin ✔'); },function(){ toast('Gagal menyalin'); });
-  } else {
-    const i=document.createElement('textarea'); i.value=s; document.body.appendChild(i); i.select();
-    try{ document.execCommand('copy'); toast('Tautan disalin ✔'); }catch(e){ toast('Gagal menyalin'); }
-    i.remove();
-  }
-}
-
 /* ===== Konfirmasi ===== */
 function confirmBox(title,msg,cb){ $('#cfTitle').textContent=title; $('#cfMsg').textContent=msg; cfCb=cb; $('#mConfirm').classList.add('show'); }
 $('#cfYes').addEventListener('click',function(){ $('#mConfirm').classList.remove('show'); if(cfCb) cfCb(); cfCb=null; });

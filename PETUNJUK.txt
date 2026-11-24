@@ -17,9 +17,15 @@ YANG AKAN USER LIHAT
   - Hanya video yang ADA DI DAFTAR ANDA (grid beranda + pencarian
     + filter kategori). Tidak ada video lain, tidak ada rekomendasi,
     tidak ada "naik berikutnya" dari YouTube.
-  - Video YouTube diputar lewat youtube-nocookie (tanpa cookie pelacak
-    YouTube & tanpa baris rekomendasi di bawah pemutar); file .mp4
-    diputar lewat pemutar bawaan browser.
+  - Video YouTube diputar dengan PEMUTAR KUSTOM milik aplikasi:
+    tidak ada tombol "Buka di YouTube", tidak ada logo/tombol YouTube
+    yang bisa diklik — pengunjung tidak bisa melihat atau melompat ke
+    tautan aslinya. Kontrol yang tersedia: putar/jeda, video
+    sebelumnya/berikutnya, geser waktu, suara, layar penuh.
+  - File .mp4 diputar lewat pemutar bawaan browser.
+  - AUTOPLAY: saat sebuah video selesai, aplikasi otomatis pindah ke
+    video berikutnya dalam daftar (setelah video terakhir, kembali
+    lagi ke video pertama — putar terus tanpa henti).
 
 ===============================================================
   CARA 1 — GANTI DAFTAR VIDEO LANGSUNG DI KODE (paling cepat)
@@ -122,8 +128,14 @@ online dulu (bagian HOSTING di atas).
   pernah dibuka (tergantung browser/hosting mengizinkan).
 - Thumbnail YouTube diambil dari i.ytimg.com; jika tampil kosong,
   otomatis diganti kotak "▶".
-- Privasi: pemutar memakai youtube-nocookie.com sehingga YouTube
-  tidak menempatkan cookie pelacak saat video diputar di aplikasi.
+- Privasi & anti-lompat: pemutar memakai YouTube IFrame API dengan
+  kontrol kustom; klik ke dalam video YouTube dimatikan
+  (pointer-events:none) sehingga tidak ada tombol/logo YouTube yang
+  bisa diklik untuk keluar ke situs/tautan aslinya.
+- Autoplay diblokir? Sebagian browser memblokir pemutaran bersuara
+  otomatis. Jika terjadi, aplikasi otomatis memutar senyap dan
+  menampilkan tombol "🔇 Ketuk untuk suara" — ketuk sekali untuk
+  menghidupkan suara.
 - Mengubah nama aplikasi: edit "name"/"short_name" di manifest.json
   dan judul di dalam index.html.
 - Mengubah PIN awal di kode: cari DEFAULT_PIN di index.html.
